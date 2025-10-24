@@ -1,5 +1,6 @@
 package com.pm;
 
+import com.pm.context.ApplicationContext;
 import java.io.IOException;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -10,10 +11,13 @@ import javafx.stage.Stage;
 public class App extends Application {
 
   private static Scene scene;
+  private static ApplicationContext context;
 
   @Override
   public void start(Stage stage) throws IOException {
-    scene = new Scene(loadFXML("primary"), 640, 480);
+    context = new ApplicationContext();
+    context.getRestServer().start();
+    scene = new Scene(loadFXML("primary"), 960, 640);
     stage.setScene(scene);
     stage.show();
   }
@@ -24,7 +28,31 @@ public class App extends Application {
 
   private static Parent loadFXML(String fxml) throws IOException {
     FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource(fxml + ".fxml"));
-    return fxmlLoader.load();
+    fxmlLoader.setControllerFactory(
+        type -> {
+          try {
+            return type.getDeclaredConstructor().newInstance();
+          } catch (Exception ex) {
+            throw new IllegalStateException("No se pudo crear controlador " + type.getName(), ex);
+          }
+        });
+    Parent parent = fxmlLoader.load();
+    Object controller = fxmlLoader.getController();
+    if (controller instanceof com.pm.ui.AppContextAware aware && context != null) {
+      aware.setApplicationContext(context);
+    }
+    return parent;
+  }
+
+  @Override
+  public void stop() {
+    if (context != null) {
+      context.close();
+    }
+  }
+
+  public static ApplicationContext getApplicationContext() {
+    return context;
   }
 
   public static void main(String[] args) {
