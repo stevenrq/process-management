@@ -108,3 +108,7 @@ desktop.ini
 *.bak
 *.swp
 *.swo
+
+/data/
+/export/
+/import/

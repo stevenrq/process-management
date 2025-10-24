@@ -67,9 +67,11 @@ final class WindowsProcessInfoProvider {
           continue;
         }
         BigDecimal memMb = null;
-        if (row.workingSet64 != null) {
+        Long workingSetBytes =
+            row.workingSet64 != null ? row.workingSet64 : row.workingSet;
+        if (workingSetBytes != null) {
           memMb =
-              BigDecimal.valueOf(row.workingSet64)
+              BigDecimal.valueOf(workingSetBytes)
                   .divide(BigDecimal.valueOf(1024 * 1024), 2, RoundingMode.HALF_UP);
         }
         Integer priority = mapPriority(row.priorityClass);
@@ -117,6 +119,7 @@ final class WindowsProcessInfoProvider {
   private static final class WindowsProcessRow {
     public Long id;
     public Long workingSet64;
+    public Long workingSet;
     public String priorityClass;
     public String path;
 
@@ -128,6 +131,10 @@ final class WindowsProcessInfoProvider {
       this.workingSet64 = workingSet64;
     }
 
+    public void setWorkingSet(Long workingSet) {
+      this.workingSet = workingSet;
+    }
+
     public void setPriorityClass(String priorityClass) {
       this.priorityClass = priorityClass;
     }
@@ -137,3 +144,4 @@ final class WindowsProcessInfoProvider {
     }
   }
 }
+
