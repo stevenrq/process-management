@@ -22,6 +22,9 @@ import java.util.List;
 import java.util.Optional;
 import javax.sql.DataSource;
 
+/**
+ * Encapsula el acceso JDBC para persistir catalogos y sus procesos asociados en la base de datos.
+ */
 public final class CatalogRepository {
 
   private final DataSource dataSource;

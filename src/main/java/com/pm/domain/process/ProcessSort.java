@@ -1,5 +1,6 @@
 package com.pm.domain.process;
 
+/** Ordenamientos admitidos para paginar procesos dentro de un catalogo. */
 public enum ProcessSort {
   CPU_DESC("cpu_pct DESC"),
   CPU_ASC("cpu_pct ASC"),

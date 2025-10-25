@@ -1,5 +1,6 @@
 package com.pm.domain;
 
+/** Define los criterios soportados para ordenar los procesos al capturarlos. */
 public enum SelectionCriterion {
   CPU,
   MEMORY;

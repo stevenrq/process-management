@@ -10,6 +10,10 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Obtiene el consumo de memoria de procesos consultando los archivos expuestos por Linux en
+ * {@code /proc}.
+ */
 public final class ProcessMemoryReader {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ProcessMemoryReader.class);

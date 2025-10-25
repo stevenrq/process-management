@@ -33,6 +33,9 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Publica la API REST con Javalin y traduce las solicitudes HTTP hacia el servicio de catalogos.
+ */
 public final class RestServer implements AutoCloseable {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(RestServer.class);

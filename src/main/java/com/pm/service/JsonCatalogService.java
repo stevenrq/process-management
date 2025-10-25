@@ -20,6 +20,10 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Expone operaciones para exportar e importar catalogos a archivos JSON ubicados en el sistema de
+ * archivos.
+ */
 public final class JsonCatalogService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(JsonCatalogService.class);

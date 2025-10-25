@@ -10,6 +10,9 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Maneja la creacion de archivos de descripcion asociados a los procesos capturados o importados.
+ */
 public final class ProcessFileService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ProcessFileService.class);

@@ -13,6 +13,9 @@ import com.pm.service.ProcessFileService;
 import com.pm.service.capture.ProcessCaptureService;
 import com.pm.service.capture.ProcessMemoryReader;
 
+/**
+ * Contenedor liviano que inicializa los servicios principales y gestiona su ciclo de vida.
+ */
 public final class ApplicationContext implements AutoCloseable {
 
   private final AppConfig config;

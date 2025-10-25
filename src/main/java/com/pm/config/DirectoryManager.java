@@ -6,7 +6,7 @@ import java.nio.file.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Ensures required directories exist for runtime artifacts. */
+/** Garantiza que los directorios requeridos por la aplicacion existan antes de ejecutarse. */
 public final class DirectoryManager {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(DirectoryManager.class);

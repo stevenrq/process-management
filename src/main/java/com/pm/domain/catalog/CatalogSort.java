@@ -1,5 +1,6 @@
 package com.pm.domain.catalog;
 
+/** Ordenamientos admitidos al listar catalogos y su representacion SQL asociada. */
 public enum CatalogSort {
   FECHA_CREACION_DESC("fecha_creacion DESC"),
   FECHA_CREACION_ASC("fecha_creacion ASC"),

@@ -6,7 +6,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import javax.sql.DataSource;
 
-/** Wraps the configured HikariCP datasource lifecycle. */
+/** Gestiona el ciclo de vida del pool de conexiones HikariCP configurado para la aplicacion. */
 public final class DatabaseManager implements AutoCloseable {
 
   private final HikariDataSource dataSource;

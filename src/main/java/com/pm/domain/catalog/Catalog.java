@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+/** Modelo de dominio que representa un catalogo de procesos capturados o importados. */
 public final class Catalog {
 
   private final Long id;

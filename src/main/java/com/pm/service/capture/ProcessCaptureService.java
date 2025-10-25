@@ -16,6 +16,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Captura procesos del sistema operativo y calcula metricas para construir fotografias segun un
+ * criterio de seleccion.
+ */
 public final class ProcessCaptureService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ProcessCaptureService.class);
@@ -141,6 +145,7 @@ public final class ProcessCaptureService {
         };
 
     if (snapshots.isEmpty()) {
+      // Evita propagar listas vacias cuando el muestreo no devuelve procesos.
       LOGGER.warn(
           "No se obtuvieron procesos tras el muestreo, se agregará el proceso actual como"
               + " respaldo");
@@ -205,3 +210,4 @@ public final class ProcessCaptureService {
   private record Baseline(
       ProcessHandle handle, String nombre, String usuario, java.time.Duration cpuDuration) {}
 }
+

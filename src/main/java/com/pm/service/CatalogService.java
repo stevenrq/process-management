@@ -26,6 +26,9 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Orquesta la captura de procesos y la administracion completa de los catalogos persistidos.
+ */
 public final class CatalogService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CatalogService.class);

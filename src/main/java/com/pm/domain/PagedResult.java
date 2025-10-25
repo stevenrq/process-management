@@ -3,6 +3,7 @@ package com.pm.domain;
 import java.util.Collections;
 import java.util.List;
 
+/** Representa una pagina de resultados del dominio con metadatos basicos de paginacion. */
 public record PagedResult<T>(List<T> content, int page, int size, long total) {
 
   public PagedResult {

@@ -42,6 +42,9 @@ import javafx.stage.Window;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Controlador principal de la interfaz JavaFX que coordina el flujo entre la vista y los servicios.
+ */
 public final class MainController implements AppContextAware {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(MainController.class);
@@ -429,6 +432,7 @@ public final class MainController implements AppContextAware {
     return DATE_FORMAT.format(instant.atZone(ZoneId.systemDefault()).toLocalDateTime());
   }
 
+  // Centraliza la ejecucion asincrona garantizando que las respuestas regresen en el hilo de UI.
   private <T> void runAsync(Supplier<T> supplier, Consumer<T> onSuccess) {
     CompletableFuture.supplyAsync(supplier)
         .whenComplete(

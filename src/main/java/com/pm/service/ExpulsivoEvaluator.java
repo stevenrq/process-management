@@ -3,6 +3,10 @@ package com.pm.service;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Evalua si un proceso debe marcarse como expulsivo usando listas de usuarios y patrones de
+ * exclusion.
+ */
 public final class ExpulsivoEvaluator {
 
   private final List<String> systemUsers;

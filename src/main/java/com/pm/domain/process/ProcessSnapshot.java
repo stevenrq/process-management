@@ -2,7 +2,7 @@ package com.pm.domain.process;
 
 import java.math.BigDecimal;
 
-/** Represents an in-memory snapshot of an OS process before it is persisted. */
+/** Representa una fotografia en memoria de un proceso antes de persistirlo. */
 public record ProcessSnapshot(
     long pid,
     String nombre,

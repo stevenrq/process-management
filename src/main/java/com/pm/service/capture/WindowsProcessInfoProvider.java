@@ -19,6 +19,10 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Consulta informacion de procesos en sistemas Windows usando PowerShell y la convierte a objetos
+ * reutilizables.
+ */
 final class WindowsProcessInfoProvider {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(WindowsProcessInfoProvider.class);
@@ -46,7 +50,7 @@ final class WindowsProcessInfoProvider {
       return Map.of();
     }
     String idList = pidBatch.stream().map(String::valueOf).collect(Collectors.joining(","));
-    // Force PowerShell to emit UTF-8 so JSON decoding works reliably on Windows consoles.
+    // Se fuerza UTF-8 para que la decodificacion JSON sea consistente en Windows.
     String script =
         "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; "
             + "$OutputEncoding = [System.Text.Encoding]::UTF8; "

@@ -16,8 +16,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Loads application configuration from {@code application.properties}, allowing overrides through
- * system properties or environment variables that match the property name in upper snake case.
+ * Carga la configuracion desde {@code application.properties} y permite sobrescribirla con
+ * propiedades de sistema o variables de entorno equivalentes en mayusculas y separadas por guion
+ * bajo.
  */
 public final class AppConfig {
 

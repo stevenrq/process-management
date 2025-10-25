@@ -18,6 +18,9 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * Convierte entre las entidades de dominio y los objetos de transporte expuestos por el API REST.
+ */
 public final class RestMapper {
 
   private RestMapper() {}

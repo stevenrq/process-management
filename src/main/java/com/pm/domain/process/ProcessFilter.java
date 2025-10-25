@@ -2,6 +2,7 @@ package com.pm.domain.process;
 
 import java.util.Optional;
 
+/** Filtros opcionales que se aplican al paginar procesos de un catalogo. */
 public record ProcessFilter(
     Optional<String> usuario,
     Optional<Boolean> expulsivo,

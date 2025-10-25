@@ -9,6 +9,9 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Verifica que el esquema relacional requerido exista y crea tablas e indices si faltan.
+ */
 public final class DatabaseInitializer {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseInitializer.class);

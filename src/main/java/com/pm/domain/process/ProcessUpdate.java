@@ -2,6 +2,7 @@ package com.pm.domain.process;
 
 import java.util.Optional;
 
+/** Valores opcionales recibidos al actualizar un proceso persistido. */
 public record ProcessUpdate(
     Optional<String> descripcion, Optional<Integer> prioridad, Optional<Boolean> expulsivo) {
 

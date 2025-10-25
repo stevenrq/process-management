@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Objects;
 
+/** Entidad inmutable que almacena los datos persistidos de un proceso en un catalogo. */
 public final class ProcessRecord {
 
   private final Long id;
