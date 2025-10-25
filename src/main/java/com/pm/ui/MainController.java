@@ -16,6 +16,7 @@ import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -26,6 +27,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
@@ -80,6 +82,12 @@ public final class MainController implements AppContextAware {
   @FXML private TableColumn<ProcessRecord, Number> colProcesoPrioridad;
   @FXML private TableColumn<ProcessRecord, String> colProcesoExpulsivo;
 
+  @FXML private TextField txtProcesoBuscar;
+  @FXML private TextField txtProcesoUsuario;
+  @FXML private ComboBox<String> cboProcesoExpulsivo;
+  @FXML private ComboBox<String> cboProcesoOrden;
+  @FXML private Button btnProcesoBuscar;
+
   @FXML private TextArea txtProcesoDescripcion;
   @FXML private Spinner<Integer> spnProcesoPrioridad;
   @FXML private CheckBox chkProcesoExpulsivo;
@@ -93,6 +101,16 @@ public final class MainController implements AppContextAware {
   private ProcessRecord selectedProcess;
   private final ObservableList<CatalogMetadata> catalogos = FXCollections.observableArrayList();
   private final ObservableList<ProcessRecord> procesos = FXCollections.observableArrayList();
+  private final ObservableList<String> procesoOrdenOpciones = FXCollections.observableArrayList();
+
+  private static final String ORDEN_RECIENTE = "Recientes primero";
+  private static final String ORDEN_ANTIGUO = "Antiguos primero";
+  private static final String ORDEN_CPU_DESC = "Mayor CPU";
+  private static final String ORDEN_CPU_ASC = "Menor CPU";
+  private static final String ORDEN_MEM_DESC = "Mayor memoria";
+  private static final String ORDEN_PRIORIDAD_DESC = "Mayor prioridad";
+  private static final String ORDEN_PRIORIDAD_ASC = "Menor prioridad";
+  private static final String ORDEN_NOMBRE_ASC = "Nombre A-Z";
 
   @FXML
   public void initialize() {
@@ -107,6 +125,7 @@ public final class MainController implements AppContextAware {
     configureProcessTable();
     spnProcesoPrioridad.setValueFactory(
         new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 99, 0));
+    configureProcessFilters();
 
     tblCatalogos
         .getSelectionModel()
@@ -150,6 +169,31 @@ public final class MainController implements AppContextAware {
         cell -> new ReadOnlyObjectWrapper<>(cell.getValue().getPrioridad()));
     colProcesoExpulsivo.setCellValueFactory(
         cell -> new ReadOnlyObjectWrapper<>(cell.getValue().isExpulsivo() ? "Si" : "No"));
+  }
+
+  private void configureProcessFilters() {
+    if (cboProcesoExpulsivo != null) {
+      cboProcesoExpulsivo.setItems(
+          FXCollections.observableArrayList("Todos", "Expulsivos", "No expulsivos"));
+      cboProcesoExpulsivo.getSelectionModel().selectFirst();
+    }
+    procesoOrdenOpciones.setAll(
+        List.of(
+            ORDEN_RECIENTE,
+            ORDEN_ANTIGUO,
+            ORDEN_CPU_DESC,
+            ORDEN_CPU_ASC,
+            ORDEN_MEM_DESC,
+            ORDEN_PRIORIDAD_DESC,
+            ORDEN_PRIORIDAD_ASC,
+            ORDEN_NOMBRE_ASC));
+    if (cboProcesoOrden != null) {
+      cboProcesoOrden.setItems(procesoOrdenOpciones);
+      cboProcesoOrden.getSelectionModel().select(ORDEN_RECIENTE);
+    }
+    if (btnProcesoBuscar != null) {
+      btnProcesoBuscar.disableProperty().bind(tblCatalogos.getSelectionModel().selectedItemProperty().isNull());
+    }
   }
 
   private TableCell<ProcessRecord, BigDecimal> createNumericCell(int scale, String suffix) {
@@ -212,6 +256,15 @@ public final class MainController implements AppContextAware {
   @FXML
   private void onBuscarCatalogos() {
     loadCatalogos();
+  }
+
+  @FXML
+  private void onBuscarProcesos() {
+    if (selectedCatalog == null) {
+      showWarning("Seleccione un catÃ¡logo para listar procesos.");
+      return;
+    }
+    loadProcesos(selectedCatalog);
   }
 
   @FXML
@@ -361,12 +414,7 @@ public final class MainController implements AppContextAware {
     runAsync(
         () ->
             catalogService.listProcesses(
-                catalogo.id(),
-                new ProcessFilter(
-                    Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()),
-                ProcessSort.CREATED_DESC,
-                1,
-                200),
+                catalogo.id(), buildProcessFilter(), resolveProcessSort(), 1, 200),
         result -> {
           procesos.setAll(result.content());
           if (!procesos.isEmpty()) {
@@ -377,6 +425,74 @@ public final class MainController implements AppContextAware {
         });
   }
 
+  private ProcessFilter buildProcessFilter() {
+    Optional<String> usuario = optionalText(txtProcesoUsuario);
+    Optional<String> nombre = optionalText(txtProcesoBuscar);
+    Optional<Boolean> expulsivo = resolveExpulsivoFilter();
+    return new ProcessFilter(usuario, expulsivo, nombre, Optional.empty());
+  }
+
+  private Optional<String> optionalText(TextField field) {
+    if (field == null) {
+      return Optional.empty();
+    }
+    String value = field.getText();
+    if (value == null || value.isBlank()) {
+      return Optional.empty();
+    }
+    return Optional.of(value.trim());
+  }
+
+  private Optional<Boolean> resolveExpulsivoFilter() {
+    if (cboProcesoExpulsivo == null) {
+      return Optional.empty();
+    }
+    String value = cboProcesoExpulsivo.getValue();
+    if (value == null) {
+      return Optional.empty();
+    }
+    return switch (value) {
+      case "Expulsivos" -> Optional.of(true);
+      case "No expulsivos" -> Optional.of(false);
+      default -> Optional.empty();
+    };
+  }
+
+  private ProcessSort resolveProcessSort() {
+    if (cboProcesoOrden == null) {
+      return ProcessSort.CREATED_DESC;
+    }
+    String selection = cboProcesoOrden.getValue();
+    if (selection == null) {
+      return ProcessSort.CREATED_DESC;
+    }
+    return switch (selection) {
+      case ORDEN_ANTIGUO -> ProcessSort.CREATED_ASC;
+      case ORDEN_CPU_DESC -> ProcessSort.CPU_DESC;
+      case ORDEN_CPU_ASC -> ProcessSort.CPU_ASC;
+      case ORDEN_MEM_DESC -> ProcessSort.MEM_DESC;
+      case ORDEN_PRIORIDAD_DESC -> ProcessSort.PRIORIDAD_DESC;
+      case ORDEN_PRIORIDAD_ASC -> ProcessSort.PRIORIDAD_ASC;
+      case ORDEN_NOMBRE_ASC -> ProcessSort.NOMBRE_ASC;
+      default -> ProcessSort.CREATED_DESC;
+    };
+  }
+
+  private void resetProcessFilters() {
+    if (txtProcesoBuscar != null) {
+      txtProcesoBuscar.clear();
+    }
+    if (txtProcesoUsuario != null) {
+      txtProcesoUsuario.clear();
+    }
+    if (cboProcesoExpulsivo != null) {
+      cboProcesoExpulsivo.getSelectionModel().selectFirst();
+    }
+    if (cboProcesoOrden != null) {
+      cboProcesoOrden.getSelectionModel().select(ORDEN_RECIENTE);
+    }
+  }
+
   private void onCatalogSelected(CatalogMetadata catalogo) {
     if (catalogo == null) {
       clearCatalogDetails();
@@ -384,7 +500,12 @@ public final class MainController implements AppContextAware {
       selectedCatalog = null;
       return;
     }
+    boolean changed =
+        this.selectedCatalog == null || this.selectedCatalog.id() != catalogo.id();
     this.selectedCatalog = catalogo;
+    if (changed) {
+      resetProcessFilters();
+    }
     lblCatalogoNombre.setText(catalogo.nombre());
     lblCatalogoDescripcion.setText(catalogo.descripcion());
     lblCatalogoOrigen.setText(catalogo.origen().name());
