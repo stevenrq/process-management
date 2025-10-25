@@ -1,7 +1,5 @@
 package com.pm.service.capture;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.BufferedReader;
@@ -10,6 +8,7 @@ import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -24,17 +23,37 @@ final class WindowsProcessInfoProvider {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(WindowsProcessInfoProvider.class);
   private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final int BATCH_SIZE = 40;
 
   Map<Long, ProcessExtraInfo> fetch(Collection<Long> pids) {
     if (pids == null || pids.isEmpty()) {
       return Map.of();
     }
-    String idList = pids.stream().map(String::valueOf).collect(Collectors.joining(","));
+    ArrayDeque<Long> queue = new ArrayDeque<>(pids);
+    Map<Long, ProcessExtraInfo> aggregated = new HashMap<>();
+    while (!queue.isEmpty()) {
+      List<Long> batch = new ArrayList<>(BATCH_SIZE);
+      while (batch.size() < BATCH_SIZE && !queue.isEmpty()) {
+        batch.add(queue.removeFirst());
+      }
+      aggregated.putAll(fetchBatch(batch));
+    }
+    return aggregated;
+  }
+
+  private Map<Long, ProcessExtraInfo> fetchBatch(List<Long> pidBatch) {
+    if (pidBatch.isEmpty()) {
+      return Map.of();
+    }
+    String idList = pidBatch.stream().map(String::valueOf).collect(Collectors.joining(","));
+    // Force PowerShell to emit UTF-8 so JSON decoding works reliably on Windows consoles.
     String script =
-        "Get-Process -Id "
+        "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; "
+            + "$OutputEncoding = [System.Text.Encoding]::UTF8; "
+            + "Get-Process -Id "
             + idList
-            + " -ErrorAction SilentlyContinue | "
-            + "Select-Object Id,WorkingSet64,PriorityClass,Path | ConvertTo-Json -Depth 2";
+            + " -ErrorAction SilentlyContinue | Select-Object"
+            + " Id,WorkingSet64,WorkingSet,PriorityClass,Path | ConvertTo-Json -Depth 2";
     ProcessBuilder builder =
         new ProcessBuilder("powershell.exe", "-NoLogo", "-NoProfile", "-Command", script);
     builder.redirectErrorStream(true);
@@ -44,7 +63,7 @@ final class WindowsProcessInfoProvider {
       try (BufferedReader reader =
           new BufferedReader(
               new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
-        output = reader.lines().collect(Collectors.joining());
+        output = reader.lines().collect(Collectors.joining(System.lineSeparator()));
       }
       int exit = process.waitFor();
       if (exit != 0) {
@@ -55,30 +74,27 @@ final class WindowsProcessInfoProvider {
         return Map.of();
       }
       JsonNode node = MAPPER.readTree(output);
-      List<WindowsProcessRow> rows = new ArrayList<>();
+      List<JsonNode> rows = new ArrayList<>();
       if (node.isArray()) {
-        rows = MAPPER.convertValue(node, new TypeReference<List<WindowsProcessRow>>() {});
+        node.forEach(rows::add);
       } else {
-        rows.add(MAPPER.convertValue(node, WindowsProcessRow.class));
+        rows.add(node);
       }
-      Map<Long, ProcessExtraInfo> map = new HashMap<>();
-      for (WindowsProcessRow row : rows) {
-        if (row == null || row.id == null) {
+      Map<Long, ProcessExtraInfo> batchResult = new HashMap<>();
+      for (JsonNode row : rows) {
+        if (row == null || row.isNull()) {
           continue;
         }
-        BigDecimal memMb = null;
-        Long workingSetBytes =
-            row.workingSet64 != null ? row.workingSet64 : row.workingSet;
-        if (workingSetBytes != null) {
-          memMb =
-              BigDecimal.valueOf(workingSetBytes)
-                  .divide(BigDecimal.valueOf(1024 * 1024), 2, RoundingMode.HALF_UP);
+        long pid = row.path("Id").asLong(-1L);
+        if (pid <= 0) {
+          continue;
         }
-        Integer priority = mapPriority(row.priorityClass);
-        boolean system = isSystemProcess(row.path);
-        map.put(row.id, new ProcessExtraInfo(memMb, priority, system));
+        BigDecimal memMb = parseMemoryMb(row);
+        Integer priority = mapPriority(parsePriority(row.get("PriorityClass")));
+        boolean system = isSystemProcess(safeText(row.get("Path")));
+        batchResult.put(pid, new ProcessExtraInfo(memMb, priority, system));
       }
-      return map;
+      return batchResult;
     } catch (InterruptedException ex) {
       Thread.currentThread().interrupt();
       LOGGER.warn("No se pudo consultar a PowerShell: {}", ex.getMessage());
@@ -89,17 +105,56 @@ final class WindowsProcessInfoProvider {
     }
   }
 
-  private Integer mapPriority(String priorityClass) {
-    if (priorityClass == null) {
+  private BigDecimal parseMemoryMb(JsonNode row) {
+    if (row == null) {
       return null;
     }
-    return switch (priorityClass.toLowerCase(Locale.ROOT)) {
-      case "idle" -> 1;
-      case "belownormal" -> 3;
-      case "normal" -> 5;
-      case "abovenormal" -> 7;
-      case "high" -> 9;
-      case "realtime" -> 10;
+    JsonNode memNode = row.get("WorkingSet64");
+    if (memNode == null || memNode.isNull()) {
+      memNode = row.get("WorkingSet");
+    }
+    if (memNode == null || memNode.isNull()) {
+      return null;
+    }
+    long bytes;
+    if (memNode.isNumber()) {
+      bytes = memNode.longValue();
+    } else {
+      try {
+        bytes = Long.parseLong(memNode.asText().trim());
+      } catch (NumberFormatException ex) {
+        return null;
+      }
+    }
+    return BigDecimal.valueOf(bytes)
+        .divide(BigDecimal.valueOf(1024 * 1024), 2, RoundingMode.HALF_UP);
+  }
+
+  private String parsePriority(JsonNode node) {
+    if (node == null || node.isNull()) {
+      return null;
+    }
+    if (node.isTextual()) {
+      return node.asText();
+    }
+    if (node.isNumber()) {
+      return Long.toString(node.longValue());
+    }
+    return node.asText();
+  }
+
+  private Integer mapPriority(String priorityClass) {
+    if (priorityClass == null || priorityClass.isBlank()) {
+      return null;
+    }
+    String normalized = priorityClass.trim().toLowerCase(Locale.ROOT);
+    return switch (normalized) {
+      case "idle", "64" -> 1;
+      case "belownormal", "16384" -> 3;
+      case "normal", "32" -> 5;
+      case "abovenormal", "32768" -> 7;
+      case "high", "128" -> 9;
+      case "realtime", "256" -> 10;
       default -> null;
     };
   }
@@ -115,33 +170,13 @@ final class WindowsProcessInfoProvider {
         || lower.startsWith("c:/windows");
   }
 
-  @JsonIgnoreProperties(ignoreUnknown = true)
-  private static final class WindowsProcessRow {
-    public Long id;
-    public Long workingSet64;
-    public Long workingSet;
-    public String priorityClass;
-    public String path;
-
-    public void setId(Long id) {
-      this.id = id;
+  private String safeText(JsonNode node) {
+    if (node == null || node.isNull()) {
+      return null;
     }
-
-    public void setWorkingSet64(Long workingSet64) {
-      this.workingSet64 = workingSet64;
+    if (node.isTextual()) {
+      return node.asText();
     }
-
-    public void setWorkingSet(Long workingSet) {
-      this.workingSet = workingSet;
-    }
-
-    public void setPriorityClass(String priorityClass) {
-      this.priorityClass = priorityClass;
-    }
-
-    public void setPath(String path) {
-      this.path = path;
-    }
+    return node.asText();
   }
 }
-
