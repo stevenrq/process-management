@@ -69,7 +69,6 @@ target/
 # =======================================
 
 # JavaFX build artifacts (packaged apps, runtime images, etc.)
-*.fxml
 *.jfx
 *.fxbuild
 *.jpackage/

@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane prefHeight="640.0" prefWidth="960.0"
+  xmlns="http://javafx.com/javafx"
+  xmlns:fx="http://javafx.com/fxml"
+  fx:controller="com.pm.ui.MainController">
+  <top>
+    <VBox spacing="8.0" BorderPane.alignment="CENTER">
+      <padding>
+        <Insets top="16.0" right="16.0" bottom="8.0" left="16.0" />
+      </padding>
+      <Label text="Gestor de procesos" style="-fx-font-size: 20px; -fx-font-weight: bold;" />
+      <Separator />
+    </VBox>
+  </top>
+  <center>
+    <SplitPane dividerPositions="0.42">
+      <items>
+        <VBox spacing="12.0" fillWidth="true">
+          <padding>
+            <Insets top="8.0" right="8.0" bottom="8.0" left="16.0" />
+          </padding>
+          <TitledPane text="Captura de catalogo" collapsible="false">
+            <content>
+              <GridPane hgap="8.0" vgap="8.0">
+                <columnConstraints>
+                  <ColumnConstraints prefWidth="110.0" />
+                  <ColumnConstraints hgrow="ALWAYS" />
+                </columnConstraints>
+                <Label text="Nombre" />
+                <TextField fx:id="txtNombre" promptText="Nombre del catalogo"
+                  GridPane.columnIndex="1" />
+                <Label text="Descripcion" GridPane.rowIndex="1" />
+                <TextArea fx:id="txtDescripcion" prefRowCount="3" wrapText="true"
+                  GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                <Label text="Criterio" GridPane.rowIndex="2" />
+                <ComboBox fx:id="cboCriterio" prefWidth="160.0" GridPane.columnIndex="1"
+                  GridPane.rowIndex="2" />
+                <Label text="Tamanio" GridPane.rowIndex="3" />
+                <Spinner fx:id="spnN" prefWidth="120.0" GridPane.columnIndex="1"
+                  GridPane.rowIndex="3" />
+                <HBox alignment="CENTER_RIGHT" spacing="8.0"
+                  GridPane.columnIndex="0" GridPane.rowIndex="4" GridPane.columnSpan="2">
+                  <Button text="Capturar catalogo" onAction="#onCapturarCatalogo" />
+                </HBox>
+              </GridPane>
+            </content>
+          </TitledPane>
+          <TitledPane text="Catalogos" collapsible="false" VBox.vgrow="ALWAYS">
+            <content>
+              <VBox spacing="8.0" fillWidth="true">
+                <padding>
+                  <Insets top="8.0" right="8.0" bottom="8.0" left="8.0" />
+                </padding>
+                <HBox spacing="8.0">
+                  <TextField fx:id="txtBuscar" promptText="Buscar catalogo" HBox.hgrow="ALWAYS" />
+                  <ComboBox fx:id="cboFiltroCriterio" prefWidth="140.0" />
+                  <Button text="Buscar" onAction="#onBuscarCatalogos" />
+                </HBox>
+                <TableView fx:id="tblCatalogos" prefHeight="200.0" VBox.vgrow="ALWAYS">
+                  <columns>
+                    <TableColumn fx:id="colCatalogoId" text="ID" prefWidth="55.0" />
+                    <TableColumn fx:id="colCatalogoNombre" text="Nombre" prefWidth="160.0" />
+                    <TableColumn fx:id="colCatalogoOrigen" text="Origen" prefWidth="120.0" />
+                    <TableColumn fx:id="colCatalogoN" text="N" prefWidth="60.0" />
+                    <TableColumn fx:id="colCatalogoFecha" text="Fecha" prefWidth="180.0" />
+                  </columns>
+                </TableView>
+                <HBox alignment="CENTER_RIGHT" spacing="8.0">
+                  <Button text="Importar" onAction="#onImportarCatalogo" />
+                  <Button text="Exportar" onAction="#onExportarCatalogo" />
+                  <Button text="Eliminar" onAction="#onEliminarCatalogo" />
+                </HBox>
+              </VBox>
+            </content>
+          </TitledPane>
+        </VBox>
+        <VBox spacing="12.0" fillWidth="true">
+          <padding>
+            <Insets top="8.0" right="16.0" bottom="8.0" left="8.0" />
+          </padding>
+          <TitledPane text="Detalle del catalogo" collapsible="false">
+            <content>
+              <GridPane hgap="8.0" vgap="8.0">
+                <columnConstraints>
+                  <ColumnConstraints prefWidth="120.0" />
+                  <ColumnConstraints hgrow="ALWAYS" />
+                </columnConstraints>
+                <Label text="Nombre" />
+                <Label fx:id="lblCatalogoNombre" text="-"
+                  style="-fx-font-weight: bold;" GridPane.columnIndex="1" />
+                <Label text="Descripcion" GridPane.rowIndex="1" />
+                <Label fx:id="lblCatalogoDescripcion" text="-"
+                  wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                <Label text="Origen" GridPane.rowIndex="2" />
+                <Label fx:id="lblCatalogoOrigen" text="-"
+                  GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                <Label text="Cantidad" GridPane.rowIndex="3" />
+                <Label fx:id="lblCatalogoN" text="-"
+                  GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                <Label text="Fecha" GridPane.rowIndex="4" />
+                <Label fx:id="lblCatalogoFecha" text="-"
+                  GridPane.columnIndex="1" GridPane.rowIndex="4" />
+              </GridPane>
+            </content>
+          </TitledPane>
+          <TitledPane text="Procesos" collapsible="false" VBox.vgrow="ALWAYS">
+            <content>
+              <VBox spacing="8.0" fillWidth="true">
+                <padding>
+                  <Insets top="8.0" right="8.0" bottom="8.0" left="8.0" />
+                </padding>
+                <GridPane hgap="8.0" vgap="8.0">
+                  <columnConstraints>
+                    <ColumnConstraints prefWidth="90.0" />
+                    <ColumnConstraints hgrow="ALWAYS" />
+                    <ColumnConstraints prefWidth="90.0" />
+                    <ColumnConstraints hgrow="ALWAYS" />
+                  </columnConstraints>
+                  <Label text="Nombre" />
+                  <TextField fx:id="txtProcesoBuscar" promptText="Nombre del proceso"
+                    GridPane.columnIndex="1" />
+                  <Label text="Usuario" GridPane.columnIndex="2" />
+                  <TextField fx:id="txtProcesoUsuario" promptText="Usuario"
+                    GridPane.columnIndex="3" />
+                  <Label text="Expulsivo" GridPane.rowIndex="1" />
+                  <ComboBox fx:id="cboProcesoExpulsivo" prefWidth="150.0"
+                    GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                  <Label text="Orden" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                  <ComboBox fx:id="cboProcesoOrden" prefWidth="160.0"
+                    GridPane.columnIndex="3" GridPane.rowIndex="1" />
+                </GridPane>
+                <HBox alignment="CENTER_RIGHT" spacing="8.0">
+                  <Button fx:id="btnProcesoBuscar" text="Buscar procesos"
+                    onAction="#onBuscarProcesos" />
+                </HBox>
+                <TableView fx:id="tblProcesos" prefHeight="250.0" VBox.vgrow="ALWAYS">
+                  <columns>
+                    <TableColumn fx:id="colProcesoPid" text="PID" prefWidth="70.0" />
+                    <TableColumn fx:id="colProcesoNombre" text="Nombre" prefWidth="160.0" />
+                    <TableColumn fx:id="colProcesoUsuario" text="Usuario" prefWidth="120.0" />
+                    <TableColumn fx:id="colProcesoCpu" text="CPU" prefWidth="90.0" />
+                    <TableColumn fx:id="colProcesoMem" text="Memoria" prefWidth="100.0" />
+                    <TableColumn fx:id="colProcesoPrioridad" text="Prioridad" prefWidth="90.0" />
+                    <TableColumn fx:id="colProcesoExpulsivo" text="Expulsivo" prefWidth="90.0" />
+                  </columns>
+                </TableView>
+                <Separator />
+                <GridPane hgap="8.0" vgap="8.0">
+                  <columnConstraints>
+                    <ColumnConstraints prefWidth="90.0" />
+                    <ColumnConstraints hgrow="ALWAYS" />
+                    <ColumnConstraints prefWidth="90.0" />
+                    <ColumnConstraints hgrow="ALWAYS" />
+                  </columnConstraints>
+                  <Label text="Descripcion" />
+                  <TextArea fx:id="txtProcesoDescripcion" prefRowCount="3" wrapText="true"
+                    GridPane.columnIndex="1" GridPane.columnSpan="3" />
+                  <Label text="Prioridad" GridPane.rowIndex="1" />
+                  <Spinner fx:id="spnProcesoPrioridad" prefWidth="120.0"
+                    GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                  <Label text="Expulsivo" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                  <CheckBox fx:id="chkProcesoExpulsivo" text="Expulsivo"
+                    GridPane.columnIndex="3" GridPane.rowIndex="1" />
+                  <HBox alignment="CENTER_RIGHT" spacing="8.0"
+                    GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.columnSpan="4">
+                    <Button text="Actualizar proceso" onAction="#onActualizarProceso" />
+                    <Button text="Eliminar proceso" onAction="#onEliminarProceso" />
+                  </HBox>
+                </GridPane>
+              </VBox>
+            </content>
+          </TitledPane>
+        </VBox>
+      </items>
+    </SplitPane>
+  </center>
+  <bottom>
+    <HBox alignment="CENTER_LEFT">
+      <padding>
+        <Insets top="8.0" right="16.0" bottom="16.0" left="16.0" />
+      </padding>
+      <Label fx:id="lblStatus" text="Listo" />
+    </HBox>
+  </bottom>
+</BorderPane>
