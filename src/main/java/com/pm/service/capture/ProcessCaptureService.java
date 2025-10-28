@@ -27,14 +27,19 @@ public final class ProcessCaptureService {
   private final ProcessMemoryReader memoryReader;
   private final int availableProcessors;
   private final boolean isWindows;
+  private final boolean isLinux;
   private final WindowsProcessInfoProvider windowsInfoProvider;
+  private final LinuxProcessInfoProvider linuxInfoProvider;
 
   public ProcessCaptureService(Duration sampleDuration, ProcessMemoryReader memoryReader) {
     this.sampleDuration = sampleDuration;
     this.memoryReader = memoryReader;
     this.availableProcessors = Math.max(Runtime.getRuntime().availableProcessors(), 1);
-    this.isWindows = System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("win");
+    String osName = System.getProperty("os.name").toLowerCase(Locale.ROOT);
+    this.isWindows = osName.contains("win");
+    this.isLinux = osName.contains("linux");
     this.windowsInfoProvider = isWindows ? new WindowsProcessInfoProvider() : null;
+    this.linuxInfoProvider = isLinux ? new LinuxProcessInfoProvider() : null;
   }
 
   private <T> T safeCall(SupplierWithException<T> supplier, T fallback) {
@@ -89,10 +94,14 @@ public final class ProcessCaptureService {
       Thread.currentThread().interrupt();
     }
 
-    Map<Long, ProcessExtraInfo> extras =
-        isWindows && windowsInfoProvider != null
-            ? windowsInfoProvider.fetch(baselines.keySet())
-            : Map.of();
+    Map<Long, ProcessExtraInfo> extras;
+    if (isWindows && windowsInfoProvider != null) {
+      extras = windowsInfoProvider.fetch(baselines.keySet());
+    } else if (isLinux && linuxInfoProvider != null) {
+      extras = linuxInfoProvider.fetch(baselines.keySet());
+    } else {
+      extras = Map.of();
+    }
 
     List<ProcessSnapshot> snapshots = new ArrayList<>();
     for (Baseline baseline : baselines.values()) {
@@ -210,4 +219,3 @@ public final class ProcessCaptureService {
   private record Baseline(
       ProcessHandle handle, String nombre, String usuario, java.time.Duration cpuDuration) {}
 }
-
