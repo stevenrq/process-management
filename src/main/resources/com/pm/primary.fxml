@@ -5,6 +5,7 @@
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressIndicator?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.Spinner?>
 <?import javafx.scene.control.SplitPane?>
@@ -60,7 +61,10 @@
                   GridPane.rowIndex="3" />
                 <HBox alignment="CENTER_RIGHT" spacing="8.0"
                   GridPane.columnIndex="0" GridPane.rowIndex="4" GridPane.columnSpan="2">
-                  <Button text="Capturar catalogo" onAction="#onCapturarCatalogo" />
+                  <Button fx:id="btnCapturarCatalogo" text="Capturar catalogo"
+                    onAction="#onCapturarCatalogo" />
+                  <ProgressIndicator fx:id="piCapturaCatalogo" prefHeight="24.0" prefWidth="24.0"
+                    visible="false" managed="false" />
                 </HBox>
               </GridPane>
             </content>

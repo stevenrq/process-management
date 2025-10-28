@@ -32,6 +32,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.TableCell;
@@ -60,6 +61,7 @@ public final class MainController implements AppContextAware {
 
   @FXML private TextField txtBuscar;
   @FXML private ComboBox<String> cboFiltroCriterio;
+  @FXML private Button btnCapturarCatalogo;
   @FXML private TableView<CatalogMetadata> tblCatalogos;
   @FXML private TableColumn<CatalogMetadata, Number> colCatalogoId;
   @FXML private TableColumn<CatalogMetadata, String> colCatalogoNombre;
@@ -93,6 +95,7 @@ public final class MainController implements AppContextAware {
   @FXML private CheckBox chkProcesoExpulsivo;
 
   @FXML private Label lblStatus;
+  @FXML private ProgressIndicator piCapturaCatalogo;
 
   private ApplicationContext context;
   private CatalogService catalogService;
@@ -240,6 +243,7 @@ public final class MainController implements AppContextAware {
     if (catalogService == null) {
       return;
     }
+    setCatalogCaptureLoading(true);
     String nombre = txtNombre.getText();
     String descripcion = txtDescripcion.getText();
     int n = spnN.getValue();
@@ -250,7 +254,8 @@ public final class MainController implements AppContextAware {
           clearCaptureForm();
           showStatus("Catálogo creado: " + catalogo.getNombre());
           loadCatalogos();
-        });
+        },
+        () -> setCatalogCaptureLoading(false));
   }
 
   @FXML
@@ -555,20 +560,44 @@ public final class MainController implements AppContextAware {
 
   // Centraliza la ejecucion asincrona garantizando que las respuestas regresen en el hilo de UI.
   private <T> void runAsync(Supplier<T> supplier, Consumer<T> onSuccess) {
+    runAsync(supplier, onSuccess, () -> {});
+  }
+
+  private <T> void runAsync(
+      Supplier<T> supplier, Consumer<T> onSuccess, Runnable onComplete) {
     CompletableFuture.supplyAsync(supplier)
         .whenComplete(
             (result, throwable) -> {
-              if (throwable != null) {
-                Platform.runLater(() -> showError(throwable));
-              } else {
-                Platform.runLater(() -> onSuccess.accept(result));
-              }
+              Runnable completion = onComplete != null ? onComplete : () -> {};
+              Platform.runLater(
+                  () -> {
+                    if (throwable != null) {
+                      completion.run();
+                      showError(throwable);
+                    } else {
+                      try {
+                        onSuccess.accept(result);
+                      } finally {
+                        completion.run();
+                      }
+                    }
+                  });
             });
   }
 
   private void showStatus(String message) {
     lblStatus.setText(message);
     LOGGER.info(message);
+  }
+
+  private void setCatalogCaptureLoading(boolean loading) {
+    if (piCapturaCatalogo != null) {
+      piCapturaCatalogo.setVisible(loading);
+      piCapturaCatalogo.setManaged(loading);
+    }
+    if (btnCapturarCatalogo != null) {
+      btnCapturarCatalogo.setDisable(loading);
+    }
   }
 
   private void showWarning(String message) {
