@@ -195,7 +195,9 @@ public final class MainController implements AppContextAware {
       cboProcesoOrden.getSelectionModel().select(ORDEN_RECIENTE);
     }
     if (btnProcesoBuscar != null) {
-      btnProcesoBuscar.disableProperty().bind(tblCatalogos.getSelectionModel().selectedItemProperty().isNull());
+      btnProcesoBuscar
+          .disableProperty()
+          .bind(tblCatalogos.getSelectionModel().selectedItemProperty().isNull());
     }
   }
 
@@ -266,7 +268,7 @@ public final class MainController implements AppContextAware {
   @FXML
   private void onBuscarProcesos() {
     if (selectedCatalog == null) {
-      showWarning("Seleccione un catÃ¡logo para listar procesos.");
+      showWarning("Seleccione un catálogo para listar procesos.");
       return;
     }
     loadProcesos(selectedCatalog);
@@ -505,8 +507,7 @@ public final class MainController implements AppContextAware {
       selectedCatalog = null;
       return;
     }
-    boolean changed =
-        this.selectedCatalog == null || this.selectedCatalog.id() != catalogo.id();
+    boolean changed = this.selectedCatalog == null || this.selectedCatalog.id() != catalogo.id();
     this.selectedCatalog = catalogo;
     if (changed) {
       resetProcessFilters();
@@ -519,15 +520,15 @@ public final class MainController implements AppContextAware {
     loadProcesos(catalogo);
   }
 
-  private void onProcessSelected(ProcessRecord record) {
-    this.selectedProcess = record;
-    if (record == null) {
+  private void onProcessSelected(ProcessRecord processRecord) {
+    this.selectedProcess = processRecord;
+    if (processRecord == null) {
       clearProcessForm();
       return;
     }
-    txtProcesoDescripcion.setText(record.getDescripcion());
-    spnProcesoPrioridad.getValueFactory().setValue(record.getPrioridad());
-    chkProcesoExpulsivo.setSelected(record.isExpulsivo());
+    txtProcesoDescripcion.setText(processRecord.getDescripcion());
+    spnProcesoPrioridad.getValueFactory().setValue(processRecord.getPrioridad());
+    chkProcesoExpulsivo.setSelected(processRecord.isExpulsivo());
   }
 
   private void clearCaptureForm() {
@@ -563,8 +564,7 @@ public final class MainController implements AppContextAware {
     runAsync(supplier, onSuccess, () -> {});
   }
 
-  private <T> void runAsync(
-      Supplier<T> supplier, Consumer<T> onSuccess, Runnable onComplete) {
+  private <T> void runAsync(Supplier<T> supplier, Consumer<T> onSuccess, Runnable onComplete) {
     CompletableFuture.supplyAsync(supplier)
         .whenComplete(
             (result, throwable) -> {

@@ -116,8 +116,8 @@ public final class Catalog {
       return this;
     }
 
-    public Builder addProceso(ProcessRecord record) {
-      this.procesos.add(record);
+    public Builder addProceso(ProcessRecord processRecord) {
+      this.procesos.add(processRecord);
       return this;
     }
 

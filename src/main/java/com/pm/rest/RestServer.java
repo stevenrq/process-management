@@ -40,6 +40,10 @@ public final class RestServer implements AutoCloseable {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(RestServer.class);
 
+  private static final String BASE_API = "/api";
+  private static final String CAT_PATH = BASE_API + "/catalogos";
+  private static final String CAT_PROCESS_PATH = CAT_PATH + "/{id}/procesos/{idp}";
+
   private final Javalin app;
   private final CatalogService catalogService;
   private final int port;
@@ -71,18 +75,22 @@ public final class RestServer implements AutoCloseable {
   }
 
   private void registerRoutes() {
-    app.get("/api/health", ctx -> ctx.json(Map.of("status", "UP", "timestamp", Instant.now())));
+    app.get(
+        BASE_API + "/health", ctx -> ctx.json(Map.of("status", "UP", "timestamp", Instant.now())));
 
-    app.get("/api/catalogos", this::handleListCatalogs);
-    app.post("/api/catalogos", this::handleCreateCatalog);
-    app.get("/api/catalogos/{id}", this::handleGetCatalog);
-    app.delete("/api/catalogos/{id}", this::handleDeleteCatalog);
-    app.get("/api/catalogos/{id}/procesos", this::handleListProcesses);
-    app.get("/api/catalogos/{id}/procesos/{idp}", this::handleGetProcess);
-    app.patch("/api/catalogos/{id}/procesos/{idp}", this::handleUpdateProcess);
-    app.delete("/api/catalogos/{id}/procesos/{idp}", this::handleDeleteProcess);
-    app.get("/api/catalogos/{id}/export", this::handleExportCatalog);
-    app.post("/api/catalogos/import", this::handleImportCatalog);
+    app.get(CAT_PATH, this::handleListCatalogs);
+    app.post(CAT_PATH, this::handleCreateCatalog);
+    app.get(CAT_PATH + "/{id}", this::handleGetCatalog);
+    app.delete(CAT_PATH + "/{id}", this::handleDeleteCatalog);
+
+    app.get(CAT_PATH + "/{id}/procesos", this::handleListProcesses);
+
+    app.get(CAT_PROCESS_PATH, this::handleGetProcess);
+    app.patch(CAT_PROCESS_PATH, this::handleUpdateProcess);
+    app.delete(CAT_PROCESS_PATH, this::handleDeleteProcess);
+
+    app.get(CAT_PATH + "/{id}/export", this::handleExportCatalog);
+    app.post(CAT_PATH + "/import", this::handleImportCatalog);
   }
 
   private void registerExceptionHandlers() {

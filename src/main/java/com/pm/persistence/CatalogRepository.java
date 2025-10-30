@@ -46,6 +46,7 @@ public final class CatalogRepository {
       List<ProcessRecord> storedProcesses =
           insertProcesses(connection, catalogId, catalog.getProcesos());
       connection.commit();
+
       return catalog.toBuilder()
           .setId(catalogId)
           .setProcesos(storedProcesses)
@@ -93,6 +94,7 @@ public final class CatalogRepository {
 
   private List<ProcessRecord> insertProcesses(
       Connection connection, long catalogId, List<ProcessRecord> processes) throws SQLException {
+
     List<ProcessRecord> stored = new ArrayList<>();
     String sql =
         """
@@ -109,29 +111,28 @@ public final class CatalogRepository {
           file_path)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """;
+
     try (PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-      for (ProcessRecord record : processes) {
-        ps.setLong(1, catalogId);
-        ps.setLong(2, record.getPid());
-        ps.setString(3, record.getNombre());
-        ps.setString(4, record.getUsuario());
-        ps.setInt(5, record.getPrioridad());
-        ps.setBoolean(6, record.isExpulsivo());
-        if (record.getCpuPct() != null) {
-          ps.setBigDecimal(7, record.getCpuPct());
-        } else {
-          ps.setNull(7, java.sql.Types.DECIMAL);
-        }
-        if (record.getMemMb() != null) {
-          ps.setBigDecimal(8, record.getMemMb());
-        } else {
-          ps.setNull(8, java.sql.Types.DECIMAL);
-        }
-        ps.setString(9, record.getDescripcion());
-        ps.setString(10, record.getFilePath());
+
+      ps.setLong(1, catalogId);
+
+      for (ProcessRecord processRecord : processes) {
+        ps.setLong(2, processRecord.getPid());
+        ps.setString(3, processRecord.getNombre());
+        ps.setString(4, processRecord.getUsuario());
+        ps.setInt(5, processRecord.getPrioridad());
+        ps.setBoolean(6, processRecord.isExpulsivo());
+
+        ps.setObject(7, processRecord.getCpuPct(), java.sql.Types.DECIMAL);
+        ps.setObject(8, processRecord.getMemMb(), java.sql.Types.DECIMAL);
+
+        ps.setString(9, processRecord.getDescripcion());
+        ps.setString(10, processRecord.getFilePath());
         ps.addBatch();
       }
+
       ps.executeBatch();
+
       try (ResultSet keys = ps.getGeneratedKeys()) {
         int index = 0;
         while (keys.next() && index < processes.size()) {

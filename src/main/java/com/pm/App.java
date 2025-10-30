@@ -8,9 +8,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-/**
- * Aplicacion JavaFX que levanta el contexto de servicios y muestra la ventana principal.
- */
+/** Aplicacion JavaFX que levanta el contexto de servicios y muestra la ventana principal. */
 public class App extends Application {
 
   private static Scene scene;

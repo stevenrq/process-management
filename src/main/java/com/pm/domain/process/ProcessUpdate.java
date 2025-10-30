@@ -6,9 +6,10 @@ import java.util.Optional;
 public record ProcessUpdate(
     Optional<String> descripcion, Optional<Integer> prioridad, Optional<Boolean> expulsivo) {
 
-  public ProcessUpdate {
-    descripcion = descripcion == null ? Optional.empty() : descripcion;
-    prioridad = prioridad == null ? Optional.empty() : prioridad;
-    expulsivo = expulsivo == null ? Optional.empty() : expulsivo;
+  public ProcessUpdate(String descripcion, Integer prioridad, Boolean expulsivo) {
+    this(
+        Optional.ofNullable(descripcion),
+        Optional.ofNullable(prioridad),
+        Optional.ofNullable(expulsivo));
   }
 }

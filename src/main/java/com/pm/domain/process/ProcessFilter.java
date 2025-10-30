@@ -9,10 +9,11 @@ public record ProcessFilter(
     Optional<String> nombreLike,
     Optional<Long> pid) {
 
-  public ProcessFilter {
-    usuario = usuario == null ? Optional.empty() : usuario;
-    expulsivo = expulsivo == null ? Optional.empty() : expulsivo;
-    nombreLike = nombreLike == null ? Optional.empty() : nombreLike;
-    pid = pid == null ? Optional.empty() : pid;
+  public ProcessFilter(String usuario, Boolean expulsivo, String nombreLike, Long pid) {
+    this(
+        Optional.ofNullable(usuario),
+        Optional.ofNullable(expulsivo),
+        Optional.ofNullable(nombreLike),
+        Optional.ofNullable(pid));
   }
 }

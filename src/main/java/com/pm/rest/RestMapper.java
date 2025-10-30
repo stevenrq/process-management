@@ -64,19 +64,19 @@ public final class RestMapper {
     return new CatalogExportResponse(detail, processes);
   }
 
-  public static ProcessResponse toProcessResponse(ProcessRecord record) {
+  public static ProcessResponse toProcessResponse(ProcessRecord processRecord) {
     return new ProcessResponse(
-        record.getId(),
-        record.getPid(),
-        record.getNombre(),
-        record.getUsuario(),
-        record.getPrioridad(),
-        record.isExpulsivo(),
-        record.getCpuPct(),
-        record.getMemMb(),
-        record.getDescripcion(),
-        record.getFilePath(),
-        record.getCreatedAt());
+        processRecord.getId(),
+        processRecord.getPid(),
+        processRecord.getNombre(),
+        processRecord.getUsuario(),
+        processRecord.getPrioridad(),
+        processRecord.isExpulsivo(),
+        processRecord.getCpuPct(),
+        processRecord.getMemMb(),
+        processRecord.getDescripcion(),
+        processRecord.getFilePath(),
+        processRecord.getCreatedAt());
   }
 
   public static <T, R> PagedResponse<R> toPagedResponse(
