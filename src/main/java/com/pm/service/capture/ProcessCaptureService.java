@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -139,6 +140,8 @@ public final class ProcessCaptureService {
               systemProcess));
     }
 
+    snapshots = aggregateByName(snapshots);
+
     Comparator<ProcessSnapshot> comparator =
         switch (criterion) {
           case CPU ->
@@ -190,6 +193,33 @@ public final class ProcessCaptureService {
     return top;
   }
 
+  private List<ProcessSnapshot> aggregateByName(List<ProcessSnapshot> snapshots) {
+    if (snapshots.isEmpty()) {
+      return snapshots;
+    }
+    Map<String, AggregatedProcess> aggregated = new LinkedHashMap<>();
+    for (ProcessSnapshot snapshot : snapshots) {
+      String nombre = snapshot.nombre() == null ? "unknown" : snapshot.nombre();
+      String key = isWindows ? nombre.toLowerCase(Locale.ROOT) : nombre;
+      aggregated.compute(
+          key,
+          (k, current) -> {
+            if (current == null) {
+              return new AggregatedProcess(nombre, snapshot);
+            }
+            current.merge(nombre, snapshot);
+            return current;
+          });
+    }
+    if (aggregated.size() != snapshots.size() && LOGGER.isDebugEnabled()) {
+      LOGGER.debug(
+          "Agrupacion por nombre redujo {} procesos a {} entradas unicas",
+          snapshots.size(),
+          aggregated.size());
+    }
+    return aggregated.values().stream().map(AggregatedProcess::toSnapshot).toList();
+  }
+
   private String extractName(String command) {
     if (command == null || command.isBlank()) {
       return "unknown";
@@ -218,4 +248,73 @@ public final class ProcessCaptureService {
 
   private record Baseline(
       ProcessHandle handle, String nombre, String usuario, java.time.Duration cpuDuration) {}
+
+  private static final class AggregatedProcess {
+    private String displayName;
+    private long representativePid;
+    private String usuario;
+    private BigDecimal cpuPctSum;
+    private BigDecimal memMbSum;
+    private Integer prioridad;
+    private boolean systemProcess;
+
+    private AggregatedProcess(String nombre, ProcessSnapshot snapshot) {
+      this.displayName = nombre;
+      this.representativePid = snapshot.pid();
+      this.usuario = sanitizeUser(snapshot.usuario());
+      this.cpuPctSum = snapshot.cpuPct();
+      this.memMbSum = snapshot.memMb();
+      this.prioridad = snapshot.prioridad();
+      this.systemProcess = snapshot.systemProcess();
+    }
+
+    private void merge(String nombre, ProcessSnapshot snapshot) {
+      if (isUnknown(displayName) && !isUnknown(nombre)) {
+        this.displayName = nombre;
+      }
+      this.representativePid = Math.min(this.representativePid, snapshot.pid());
+      String candidateUser = sanitizeUser(snapshot.usuario());
+      if (isUnknown(this.usuario) && !isUnknown(candidateUser)) {
+        this.usuario = candidateUser;
+      }
+      this.cpuPctSum = sumMetric(this.cpuPctSum, snapshot.cpuPct());
+      this.memMbSum = sumMetric(this.memMbSum, snapshot.memMb());
+      if (snapshot.prioridad() != null) {
+        this.prioridad =
+            this.prioridad == null
+                ? snapshot.prioridad()
+                : Math.max(this.prioridad, snapshot.prioridad());
+      }
+      this.systemProcess = this.systemProcess || snapshot.systemProcess();
+    }
+
+    private ProcessSnapshot toSnapshot() {
+      String nombre = isUnknown(displayName) ? "unknown" : displayName;
+      String user = isUnknown(usuario) ? "unknown" : usuario;
+      return new ProcessSnapshot(
+          representativePid, nombre, user, cpuPctSum, memMbSum, prioridad, systemProcess);
+    }
+
+    private static BigDecimal sumMetric(BigDecimal base, BigDecimal extra) {
+      if (base == null) {
+        return extra;
+      }
+      if (extra == null) {
+        return base;
+      }
+      return base.add(extra);
+    }
+
+    private static String sanitizeUser(String user) {
+      if (user == null) {
+        return null;
+      }
+      String trimmed = user.trim();
+      return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private static boolean isUnknown(String value) {
+      return value == null || value.isBlank() || "unknown".equalsIgnoreCase(value);
+    }
+  }
 }
